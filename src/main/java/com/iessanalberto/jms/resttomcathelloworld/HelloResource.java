@@ -6,27 +6,39 @@ import jakarta.ws.rs.Produces;
 
 @Path("/hello-world")
 public class HelloResource {
-    //objeto para convertir JSON a Java
+    // Objeto para convertir JSON a Java
     private ObjectMapper objectMapper = new ObjectMapper();
+    // Unidad de persistencia
+    private EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("persistence");
 
-    //metodo para peticiones GET
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String hello() {
         return "Hello, World!";
     }
 
-    //metodo para manejar peticiones POST
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response guardarEnDatabase(String json) {
+    public Response saveToDatabase() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
+
         try {
-            // Convertir el JSON recibido en un objeto Java
-            YourObject yourObject = objectMapper.readValue(json, EntityEntity.class); 
-            database.save(yourObject);
+            transaction.begin();
+            File jsonFile = new File("src/main/resources/insertEntity.json");
+            List<EntityEntity> entityEntities = objectMapper.readValue(jsonFile, new TypeReference<List<EntityEntity>>() {});
+            for (EntityEntity entity : entityEntities) {
+                entityManager.persist(entity);
+            }
+            transaction.commit();
             return Response.status(Response.Status.CREATED).build();
         } catch (Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
             return Response.status(Response.Status.BAD_REQUEST).entity("Error al procesar el JSON: " + e.getMessage()).build();
+        } finally {
+            entityManager.close(); // Cerrar EntityManager
         }
     }
 }
