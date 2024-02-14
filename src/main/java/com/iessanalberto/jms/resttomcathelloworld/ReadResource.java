@@ -2,7 +2,6 @@ package com.iessanalberto.jms.resttomcathelloworld;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
-import org.json.JSONObject;
 
 
 @Path("/read-json")
